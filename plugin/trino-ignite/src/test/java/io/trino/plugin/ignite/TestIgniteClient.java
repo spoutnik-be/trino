@@ -14,7 +14,6 @@
 package io.trino.plugin.ignite;
 
 import io.trino.plugin.base.mapping.DefaultIdentifierMapping;
-import io.trino.plugin.jdbc.BaseJdbcConfig;
 import io.trino.plugin.jdbc.ColumnMapping;
 import io.trino.plugin.jdbc.DefaultQueryBuilder;
 import io.trino.plugin.jdbc.JdbcClient;
@@ -73,7 +72,7 @@ public class TestIgniteClient
                     .build();
 
     public static final JdbcClient JDBC_CLIENT = new IgniteClient(
-            new BaseJdbcConfig(),
+            new IgniteJdbcConfig(),
             session -> { throw new UnsupportedOperationException(); },
             new DefaultQueryBuilder(RemoteQueryModifier.NONE),
             new DefaultIdentifierMapping(),

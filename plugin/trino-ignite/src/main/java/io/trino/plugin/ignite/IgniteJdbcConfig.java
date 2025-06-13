@@ -13,17 +13,40 @@
  */
 package io.trino.plugin.ignite;
 
+import io.airlift.configuration.Config;
+import io.airlift.configuration.ConfigDescription;
 import io.trino.plugin.jdbc.BaseJdbcConfig;
 import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.NotNull;
 import org.apache.ignite.IgniteJdbcThinDriver;
 
 import java.sql.SQLException;
+import java.util.Optional;
 
 import static org.apache.ignite.internal.jdbc.thin.JdbcThinUtils.URL_PREFIX;
 
 public class IgniteJdbcConfig
         extends BaseJdbcConfig
 {
+    private static final String IDENTIFIER_QUOTE = "identifier-quote";
+    private static final String DEFAULT_IDENTIFIER_QUOTE = "`";
+
+    private Optional<String> identifierQuote = Optional.empty();
+
+    @NotNull
+    public String getIdentifierQuote()
+    {
+        return identifierQuote.orElse(DEFAULT_IDENTIFIER_QUOTE);
+    }
+
+    @Config(IDENTIFIER_QUOTE)
+    @ConfigDescription("Quote character for query identifiers")
+    public BaseJdbcConfig setIdentifierQuote(String identifierQuote)
+    {
+        this.identifierQuote = Optional.of(identifierQuote);
+        return this;
+    }
+
     @AssertTrue(message = "JDBC URL for Ignite connector should start with " + URL_PREFIX)
     public boolean isUrlValid()
     {
