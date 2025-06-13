@@ -143,8 +143,6 @@ import static java.util.stream.Collectors.joining;
 public class IgniteClient
         extends BaseJdbcClient
 {
-    private static final String IGNITE_SCHEMA = "PUBLIC";
-
     private static final String IGNITE_DUMMY_ID = "dummy_id";
     private static final Splitter SPLITTER = Splitter.on("\"").omitEmptyStrings().trimResults();
     private static final LocalDate MIN_DATE = LocalDate.parse("1970-01-01");
@@ -195,7 +193,20 @@ public class IgniteClient
     @Override
     public Collection<String> listSchemas(Connection connection)
     {
-        return ImmutableSet.of(IGNITE_SCHEMA);
+        try (ResultSet resultSet = connection.getMetaData().getSchemas(null, null)) {
+            ImmutableSet.Builder<String> schemaNames = ImmutableSet.builder();
+            while (resultSet.next()) {
+                String schemaName = resultSet.getString("TABLE_SCHEM");
+                // skip internal schemas
+                if (filterSchema(schemaName)) {
+                    schemaNames.add(schemaName);
+                }
+            }
+            return schemaNames.build();
+        }
+        catch (SQLException e) {
+            throw new TrinoException(JDBC_ERROR, e);
+        }
     }
 
     @Override
@@ -205,10 +216,9 @@ public class IgniteClient
         DatabaseMetaData metadata = connection.getMetaData();
         return metadata.getTables(
                 null, // no catalogs in Ignite
-                // TODO: https://github.com/trinodb/trino/issues/8552 support user custom schemas.
-                escapeObjectNameForMetadataQuery(schemaName, metadata.getSearchStringEscape()).orElse(IGNITE_SCHEMA),
+                escapeObjectNameForMetadataQuery(schemaName, metadata.getSearchStringEscape()).orElse(null),
                 escapeObjectNameForMetadataQuery(tableName, metadata.getSearchStringEscape()).orElse(null),
-                new String[] {"TABLE", "VIEW"});
+                getTableTypes().map(types -> types.toArray(String[]::new)).orElse(null));
     }
 
     @Override
