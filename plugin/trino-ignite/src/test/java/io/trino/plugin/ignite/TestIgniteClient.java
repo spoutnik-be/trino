@@ -15,6 +15,7 @@ package io.trino.plugin.ignite;
 
 import io.trino.plugin.base.mapping.DefaultIdentifierMapping;
 import io.trino.plugin.jdbc.ColumnMapping;
+import io.trino.plugin.jdbc.DecimalConfig;
 import io.trino.plugin.jdbc.DefaultQueryBuilder;
 import io.trino.plugin.jdbc.JdbcClient;
 import io.trino.plugin.jdbc.JdbcColumnHandle;
@@ -38,6 +39,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static io.trino.SessionTestUtils.TEST_SESSION;
+import static io.trino.plugin.jdbc.DecimalConfig.DecimalMapping.ALLOW_OVERFLOW;
 import static io.trino.spi.type.BigintType.BIGINT;
 import static io.trino.spi.type.BooleanType.BOOLEAN;
 import static io.trino.spi.type.DoubleType.DOUBLE;
@@ -46,6 +48,7 @@ import static io.trino.spi.type.VarcharType.createVarcharType;
 import static io.trino.sql.ir.IrExpressions.not;
 import static io.trino.sql.planner.TestingPlannerContext.PLANNER_CONTEXT;
 import static io.trino.testing.TestingConnectorSession.SESSION;
+import static java.math.RoundingMode.HALF_UP;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TestIgniteClient
@@ -71,12 +74,19 @@ public class TestIgniteClient
                     .setJdbcTypeHandle(new JdbcTypeHandle(Types.VARCHAR, Optional.of("varchar"), Optional.of(10), Optional.empty(), Optional.empty(), Optional.empty()))
                     .build();
 
+    public static final DecimalConfig DECIMAL_CONFIG = new DecimalConfig()
+            .setDecimalMapping(ALLOW_OVERFLOW)
+            .setDecimalDefaultScale(16)
+            .setDecimalDefaultPrecision(38)
+            .setDecimalRoundingMode(HALF_UP);
+
     public static final JdbcClient JDBC_CLIENT = new IgniteClient(
             new IgniteJdbcConfig(),
             session -> { throw new UnsupportedOperationException(); },
             new DefaultQueryBuilder(RemoteQueryModifier.NONE),
             new DefaultIdentifierMapping(),
-            RemoteQueryModifier.NONE);
+            RemoteQueryModifier.NONE,
+            DECIMAL_CONFIG);
 
     @Test
     public void testImplementCount()

@@ -30,6 +30,7 @@ public class DecimalSessionSessionProperties
         implements SessionPropertiesProvider
 {
     public static final String DECIMAL_MAPPING = "decimal_mapping";
+    public static final String DECIMAL_DEFAULT_PRECISION = "decimal_default_precision";
     public static final String DECIMAL_DEFAULT_SCALE = "decimal_default_scale";
     public static final String DECIMAL_ROUNDING_MODE = "decimal_rounding_mode";
 
@@ -55,6 +56,11 @@ public class DecimalSessionSessionProperties
                         "Rounding mode for mapping unspecified and exceeding precision decimals. Not used when " + DECIMAL_MAPPING + " is set to STRICT",
                         RoundingMode.class,
                         decimalConfig.getDecimalRoundingMode(),
+                        false),
+                integerProperty(
+                        DECIMAL_DEFAULT_PRECISION,
+                        "Default decimal precision for mapping unspecified and exceeding precision decimals. Not used when " + DECIMAL_MAPPING + " is set to STRICT",
+                        decimalConfig.getDecimalDefaultPrecision(),
                         false));
     }
 
@@ -77,5 +83,10 @@ public class DecimalSessionSessionProperties
     public static RoundingMode getDecimalRoundingMode(ConnectorSession session)
     {
         return session.getProperty(DECIMAL_ROUNDING_MODE, RoundingMode.class);
+    }
+
+    public static int getDecimalDefaultPrecision(ConnectorSession session)
+    {
+        return session.getProperty(DECIMAL_DEFAULT_PRECISION, Integer.class);
     }
 }

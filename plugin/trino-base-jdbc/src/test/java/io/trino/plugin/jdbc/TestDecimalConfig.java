@@ -34,6 +34,7 @@ public class TestDecimalConfig
         assertRecordedDefaults(recordDefaults(DecimalConfig.class)
                 .setDecimalMapping(STRICT)
                 .setDecimalDefaultScale(0)
+                .setDecimalDefaultPrecision(0)
                 .setDecimalRoundingMode(UNNECESSARY));
     }
 
@@ -43,12 +44,14 @@ public class TestDecimalConfig
         Map<String, String> properties = ImmutableMap.<String, String>builder()
                 .put("decimal-mapping", "allow_overflow")
                 .put("decimal-default-scale", "16")
+                .put("decimal-default-precision", "38")
                 .put("decimal-rounding-mode", "HALF_UP")
                 .buildOrThrow();
 
         DecimalConfig expected = new DecimalConfig()
                 .setDecimalMapping(ALLOW_OVERFLOW)
                 .setDecimalDefaultScale(16)
+                .setDecimalDefaultPrecision(38)
                 .setDecimalRoundingMode(HALF_UP);
 
         assertFullMapping(properties, expected);

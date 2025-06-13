@@ -25,6 +25,7 @@ import io.trino.plugin.base.mapping.IdentifierMapping;
 import io.trino.plugin.jdbc.BaseJdbcClient;
 import io.trino.plugin.jdbc.ColumnMapping;
 import io.trino.plugin.jdbc.ConnectionFactory;
+import io.trino.plugin.jdbc.DecimalConfig;
 import io.trino.plugin.jdbc.JdbcColumnHandle;
 import io.trino.plugin.jdbc.JdbcExpression;
 import io.trino.plugin.jdbc.JdbcJoinCondition;
@@ -150,6 +151,7 @@ public class IgniteClient
 
     private final ConnectorExpressionRewriter<ParameterizedExpression> connectorExpressionRewriter;
     private final AggregateFunctionRewriter<JdbcExpression, ?> aggregateFunctionRewriter;
+    private final DecimalConfig decimalConfig;
 
     @Inject
     public IgniteClient(
@@ -157,7 +159,8 @@ public class IgniteClient
             ConnectionFactory connectionFactory,
             QueryBuilder queryBuilder,
             IdentifierMapping identifierMapping,
-            RemoteQueryModifier queryModifier)
+            RemoteQueryModifier queryModifier,
+            DecimalConfig decimalConfig)
     {
         super(config.getIdentifierQuote(), connectionFactory, queryBuilder, config.getJdbcTypesMappedToVarchar(), identifierMapping, queryModifier, false);
 
@@ -188,6 +191,7 @@ public class IgniteClient
                         .add(new ImplementAvgBigint())
                         .add(new ImplementCountDistinct(bigintTypeHandle, true))
                         .build());
+        this.decimalConfig = decimalConfig;
     }
 
     @Override
@@ -252,8 +256,8 @@ public class IgniteClient
                 return Optional.of(doubleColumnMapping());
 
             case Types.DECIMAL:
-                int decimalDigits = typeHandle.requiredDecimalDigits();
-                int precision = typeHandle.requiredColumnSize();
+                int decimalDigits = typeHandle.decimalDigits().orElse(this.decimalConfig.getDecimalDefaultScale());
+                int precision = typeHandle.columnSize().orElse(this.decimalConfig.getDecimalDefaultPrecision());
                 if (getDecimalRounding(session) == ALLOW_OVERFLOW && precision > Decimals.MAX_PRECISION) {
                     int scale = min(decimalDigits, getDecimalDefaultScale(session));
                     return Optional.of(decimalColumnMapping(createDecimalType(Decimals.MAX_PRECISION, scale), getDecimalRoundingMode(session)));

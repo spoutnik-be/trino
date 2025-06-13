@@ -28,6 +28,7 @@ public class DecimalConfig
 {
     private DecimalMapping decimalMapping = DecimalMapping.STRICT;
     private int decimalDefaultScale;
+    private int decimalDefaultPrecision;
     private RoundingMode decimalRoundingMode = UNNECESSARY;
 
     public enum DecimalMapping
@@ -78,5 +79,20 @@ public class DecimalConfig
     {
         this.decimalRoundingMode = decimalRoundingMode;
         return this;
+    }
+
+    @Config("decimal-default-precision")
+    @ConfigDescription("Default decimal precision for mapping unspecified and exceeding precision decimals. Not used when " + DECIMAL_MAPPING + " is set to STRICT")
+    public DecimalConfig setDecimalDefaultPrecision(Integer decimalDefaultPrecision)
+    {
+        this.decimalDefaultPrecision = decimalDefaultPrecision;
+        return this;
+    }
+
+    @Min(0)
+    @Max(38)
+    public int getDecimalDefaultPrecision()
+    {
+        return decimalDefaultPrecision;
     }
 }
